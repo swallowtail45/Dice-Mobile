@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import
 import '../widgets/custom_input.dart';
 import 'register.dart';
-import 'homepage.dart';
+import 'main_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Login Berhasil!")),
         );
-        Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => MainPage()));
         // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
       }
     } on FirebaseAuthException catch (e) {
