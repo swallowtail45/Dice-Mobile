@@ -1,20 +1,15 @@
-import 'package:dice/screens/profile.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import Core
-import 'firebase_options.dart'; // File hasil generate dari flutterfire configure
-import 'screens/login.dart';
-import 'screens/profile.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-//tambahan nnti apus
+import 'screens/main_page.dart';
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Wajib jika main async
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Firebase
-  // Pastikan Anda sudah menjalankan 'flutterfire configure' untuk mendapatkan firebase_options.dart
-  // Jika belum, hapus parameter 'options' dan biarkan default (tapi setup manual lebih ribet)
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -33,7 +28,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Dice & Dice App',
       theme: ThemeData(fontFamily: 'Serif', primarySwatch: Colors.blue),
-      home: const ProfilePage(),
+      home: const MainPage(),
     );
   }
 }

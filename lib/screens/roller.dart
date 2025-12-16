@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'navbar.dart';
+import 'app_header.dart';
 
 // ... (Class ActiveDie tetap sama, tidak berubah) ...
 class ActiveDie {
@@ -112,48 +113,10 @@ class _DiceRollerPageState extends State<DiceRollerPage> {
             child: Column(
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0,
-                    vertical: 20.0,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const CircleAvatar(
-                        radius: 28,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=5',
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: const [
-                            Text(
-                              "Dice Roller",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Go on a game, roll now!",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 56),
-                    ],
-                  ),
+                const AppHeader(
+                  title: "Dice Roller",
+                  subtitle: "Go on a game, roll now!",
                 ),
-
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
@@ -308,7 +271,7 @@ class _DiceRollerPageState extends State<DiceRollerPage> {
                             ),
                           ),
 
-                          const SizedBox(height: 100), // Space for Navbar
+                          const SizedBox(height: 120), // Space for Navbar
                         ],
                       ),
                     ),
