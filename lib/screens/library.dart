@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
+import '../models/bookmark_model.dart';
+import '../services/bookmark_service.dart';
 import 'app_header.dart';
 
 class LibraryPage extends StatefulWidget {
-  const LibraryPage({super.key});
+  final Function(int)? onNavigate;
+  
+  const LibraryPage({
+    super.key,
+    required this.onNavigate,
+  });
 
   @override
   State<LibraryPage> createState() => _LibraryPageState();
 }
 
 class _LibraryPageState extends State<LibraryPage> {
-  // Warna asli dari kode Anda sebelumnya
   final Color clrItemBrown = const Color(0xFF6D4B41);
+  final BookmarkService _service = BookmarkService();
 
   bool isSelectionMode = false;
-  bool isSelected = false;
-  final GlobalKey menuKey = GlobalKey();
+  String? selectedId;
 
   void exitSelectionMode() {
     if (isSelectionMode) {
       setState(() {
         isSelectionMode = false;
-        isSelected = false;
+        selectedId = null;
       });
     }
   }
@@ -29,22 +35,19 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // GestureDetector untuk exit selection mode
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: exitSelectionMode,
         child: Stack(
           children: [
-            // 1. BACKGROUND (Dikembalikan seperti sebelumnya: Tidak Putih Polos)
             Positioned.fill(
               child: Opacity(
-                opacity: 0.12, // Opasitas sesuai kode asli Anda
+                opacity: 0.12,
                 child: Image.network(
-                  // Menggunakan URL gambar yang sama untuk placeholder
                   'https://i.pinimg.com/originals/e8/34/08/e8340882583842c38d41577782163353.jpg',
                   fit: BoxFit.cover,
-                  errorBuilder: (c, o, s) => Container(color: Colors.grey[100]),
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: Colors.grey[100]),
                 ),
               ),
             ),
@@ -52,29 +55,47 @@ class _LibraryPageState extends State<LibraryPage> {
             SafeArea(
               child: Column(
                 children: [
-                  // 2. HEADER
                   const AppHeader(
                     title: "Library",
                     subtitle: "Manage your collection",
                   ),
 
-                  // 3. KONTEN LIST
                   Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ), // Padding asli 20
-                      children: [
-                        const SizedBox(height: 10),
+                    child: StreamBuilder<List<Bookmark>>(
+                      stream: _service.getBookmarks(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
 
-                        buildContentItem(),
+                        final items = snapshot.data!;
 
-                        const SizedBox(height: 10),
+                        if (items.isEmpty) {
+                          return const Center(
+                            child: Text("Library kosong"),
+                          );
+                        }
 
-                        buildBottomButton(),
+                        return ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          children: [
+                            const SizedBox(height: 10),
 
-                        const SizedBox(height: 100),
-                      ],
+                            ...items.map(
+                              (e) => Padding(
+                                padding:
+                                    const EdgeInsets.only(bottom: 10),
+                                child: buildContentItem(e),
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+                            buildBottomButton(),
+                            const SizedBox(height: 100),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -86,8 +107,9 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  // --- WIDGET ITEM KONTEN (Warna 0xFF6D4B41) ---
-  Widget buildContentItem() {
+  Widget buildContentItem(Bookmark bookmark) {
+    final bool isSelected = selectedId == bookmark.id;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -95,93 +117,63 @@ class _LibraryPageState extends State<LibraryPage> {
         onLongPress: () {
           setState(() {
             isSelectionMode = true;
+            selectedId = bookmark.id;
           });
         },
         onTap: () {
           if (isSelectionMode) {
             setState(() {
-              isSelected = !isSelected;
-              if (!isSelected) {
-                isSelectionMode = false;
-              }
+              selectedId = isSelected ? null : bookmark.id;
+              if (selectedId == null) isSelectionMode = false;
             });
-          } else {
-            print("Content dibuka");
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
           decoration: BoxDecoration(
-            color: clrItemBrown, // Warna Coklat Tua Asli
+            color: clrItemBrown,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (isSelectionMode)
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Checkbox(
-                      value: isSelected,
-                      activeColor: Colors.white,
-                      checkColor: Colors.black, // Check hitam sesuai kode asli
-                      onChanged: (v) {
-                        setState(() {
-                          isSelected = v!;
-                          if (!isSelected) {
-                            isSelectionMode = false;
-                          }
-                        });
-                      },
-                    ),
+                  child: Checkbox(
+                    value: isSelected,
+                    activeColor: Colors.white,
+                    checkColor: Colors.black,
+                    onChanged: (v) {
+                      setState(() {
+                        selectedId = v! ? bookmark.id : null;
+                        if (!v) isSelectionMode = false;
+                      });
+                    },
                   ),
                 ),
 
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "Kesatria Gelap Pemburu Myth",
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  bookmark.title,
+                  style:
+                      const TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
 
-              InkWell(
-                key: menuKey,
-                onTap: () async {
-                  final RenderBox button =
-                      menuKey.currentContext!.findRenderObject() as RenderBox;
-                  final RenderBox overlay =
-                      Overlay.of(context).context.findRenderObject()
-                          as RenderBox;
-                  final Offset pos = button.localToGlobal(Offset.zero);
-
-                  final value = await showMenu(
-                    context: context,
-                    color: Colors.white,
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    position: RelativeRect.fromLTRB(
-                      pos.dx,
-                      pos.dy + button.size.height,
-                      overlay.size.width - pos.dx - button.size.width,
-                      0,
-                    ),
-                    items: const [
-                      PopupMenuItem(value: "view", child: Text("View")),
-                      PopupMenuItem(value: "delete", child: Text("Delete")),
-                      PopupMenuItem(value: "favorite", child: Text("Favorite")),
-                    ],
-                  );
-                  if (value != null) print("$value dipilih");
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == "delete") {
+                    _service.deleteBookmark(bookmark.id);
+                  }
                 },
-                child: const Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: Icon(Icons.more_horiz_rounded, color: Colors.white),
-                ),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: "view", child: Text("View")),
+                  PopupMenuItem(value: "delete", child: Text("Delete")),
+                  PopupMenuItem(value: "favorite", child: Text("Favorite")),
+                ],
+                icon: const Icon(Icons.more_horiz_rounded,
+                    color: Colors.white),
               ),
             ],
           ),
@@ -190,42 +182,41 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  // --- TOMBOL BAWAH (Style Transparan + Border) ---
-  Widget buildBottomButton() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: () {
-        if (isSelectionMode && isSelected) {
-          print("HAPUS DATA");
-          setState(() {
-            isSelected = false;
-            isSelectionMode = false;
-          });
-        } else {
-          print("Tambah data");
-        }
-      },
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          // Logic warna asli: Merah jika select, Transparan jika tidak
-          color: isSelectionMode ? Colors.red : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            // Border Merah jika select, Coklat jika tidak
-            color: isSelectionMode ? Colors.red : clrItemBrown,
-            width: 1.2,
-          ),
-        ),
-        child: Center(
-          child: Icon(
-            isSelectionMode ? Icons.delete : Icons.add,
-            // Icon Putih jika select, Coklat jika tidak
-            color: isSelectionMode ? Colors.white : clrItemBrown,
-            size: 26,
-          ),
+  // ⬇️ INI YANG PENTING
+Widget buildBottomButton() {
+  return InkWell(
+    borderRadius: BorderRadius.circular(10),
+    onTap: () {
+      if (isSelectionMode && selectedId != null) {
+        _service.deleteBookmark(selectedId!);
+        setState(() {
+          isSelectionMode = false;
+          selectedId = null;
+        });
+      } else {
+        // ⬇️ PINDAH KE TAB HOME (INDEX 0)
+        widget.onNavigate?.call(0);
+      }
+    },
+    child: Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: isSelectionMode ? Colors.red : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelectionMode ? Colors.red : clrItemBrown,
+          width: 1.2,
         ),
       ),
-    );
-  }
+      child: Center(
+        child: Icon(
+          isSelectionMode ? Icons.delete : Icons.add,
+          color: isSelectionMode ? Colors.white : clrItemBrown,
+          size: 26,
+        ),
+      ),
+    ),
+  );
+}
+
 }

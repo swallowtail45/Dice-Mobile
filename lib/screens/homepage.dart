@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'app_header.dart'; // Pastikan file ini ada
-// import 'navbar.dart'; // Jika ingin memanggil navbar di sini juga
+import 'package:file_picker/file_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'app_header.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -10,139 +11,145 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // --- PALET WARNA (Sesuai DiceRollerPage) ---
   final Color clrResultBrown = const Color(0xFF755C52);
   final Color clrDarkButton = const Color(0xFF33333D);
-  final Color clrGrayBox = const Color(0xFFD6DBDC);
 
+  final TextEditingController _storyController = TextEditingController();
+
+  // ================= POST PDF (METADATA ONLY) =================
+  Future<void> _pickPdfAndPost() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result == null) return;
+
+      final fileName = result.files.single.name;
+
+      await FirebaseFirestore.instance.collection('feeds').add({
+        'username': 'gardiono ke-2',
+        'avatarUrl': '', // ⛔ hindari NetworkImage error di web
+        'statusText': _storyController.text.trim(),
+        'cardTitle': fileName,
+        'fileType': 'pdf',
+        'likes': 80,
+        'upvotes': 80,
+        'comments': 80,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      _storyController.clear();
+    } catch (e) {
+      debugPrint("ERROR POST: $e");
+    }
+  }
+
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // --- BACKGROUND PATTERN (Opsional, agar sama dengan Dice Page) ---
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.05,
-              child: Image.network(
-                'https://i.pinimg.com/originals/e8/34/08/e8340882583842c38d41577782163353.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (c, o, s) => Container(color: Colors.white),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const AppHeader(
+              title: "Hello User",
+              subtitle: "What are you going to do today?",
+            ),
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                children: [
+                  const SizedBox(height: 10),
+                  _buildCreateStoryBox(),
+                  const SizedBox(height: 30),
+
+                  // ================= FEED =================
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('feeds')
+                        .orderBy('createdAt', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Center(child: Text("Belum ada feed"));
+                      }
+
+                      final docs = snapshot.data!.docs;
+
+                      return Column(
+                        children: docs.map((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+
+                          return FeedItem(
+                            feedId: doc.id,
+                            username: data['username'],
+                            statusText: data['statusText'] ?? '',
+                            cardTitle: data['cardTitle'],
+                            cardColor: clrResultBrown,
+                            likes: data['likes'] ?? 0,
+                            upvotes: data['upvotes'] ?? 0,
+                            comments: data['comments'] ?? 0,
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-          ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                // 1. HEADER (Konsisten)
-                const AppHeader(
-                  title: "Hello User",
-                  subtitle: "What are you going to do today?",
-                ),
-
-                // 2. KONTEN SCROLLABLE
-                Expanded(
-                  child: ListView(
-                    // PADDING 24.0 (Sesuai Acuan)
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                    children: [
-                      const SizedBox(height: 10),
-
-                      // Input Box (Create Story)
-                      _buildCreateStoryBox(),
-
-                      const SizedBox(height: 30),
-
-                      // Feed Item 1
-                      FeedItem(
-                        username: "gardiono ke-2",
-                        avatarUrl: "https://i.pravatar.cc/150?img=11",
-                        statusText: "Just post my new story",
-                        cardTitle: "Kesatria Gelap Pemburu Myth",
-                        cardColor: clrResultBrown, // Menggunakan warna acuan
-                        likes: 80,
-                        upvotes: 80,
-                        comments: 80,
-                      ),
-
-                      // Feed Item 2
-                      FeedItem(
-                        username: "penyembah_kacamata",
-                        avatarUrl: "https://i.pravatar.cc/150?img=33",
-                        statusText: "My kisah cik",
-                        cardTitle: "My Kisah: Waguro dan Rintara arts",
-                        cardColor: clrResultBrown, // Menggunakan warna acuan
-                        likes: 12,
-                        upvotes: 5,
-                        comments: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // JIKA INGIN NAVBAR MUNCUL DI SINI JUGA:
-          /*
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: CustomNavbar(
-              selectedIndex: 0, // 0 untuk Home/Profile
-              onTap: (index) { print("Nav $index"); },
-            ),
-          ),
-          */
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // ================= CREATE STORY =================
   Widget _buildCreateStoryBox() {
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white, // Atau clrGrayBox jika ingin abu-abu penuh
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        // Border dibuat mirip style DiceRoller (Colors.black12 atau grey.shade300)
         border: Border.all(color: Colors.black12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Column(
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: TextField(
+                controller: _storyController,
                 maxLines: null,
                 decoration: const InputDecoration(
                   hintText: "I just make a new story...",
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
                 ),
               ),
             ),
           ),
-          // Tombol Upload (Warna clrDarkButton)
-          Container(
-            width: double.infinity,
-            height: 50,
-            decoration: BoxDecoration(
-              color: clrDarkButton, // 0xFF33333D
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15),
+
+          GestureDetector(
+            onTap: _pickPdfAndPost,
+            child: Container(
+              height: 50,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: clrDarkButton,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(15),
+                  bottomRight: Radius.circular(15),
+                ),
               ),
+              child: const Icon(Icons.upload_file, color: Colors.white70),
             ),
-            child: const Icon(Icons.upload_file, color: Colors.white70),
           ),
         ],
       ),
@@ -150,12 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-// =========================================
-// Feed Item Widget
-// =========================================
+// ================= FEED ITEM =================
 class FeedItem extends StatelessWidget {
+  final String feedId;
   final String username;
-  final String avatarUrl;
   final String statusText;
   final String cardTitle;
   final Color cardColor;
@@ -165,8 +170,8 @@ class FeedItem extends StatelessWidget {
 
   const FeedItem({
     super.key,
+    required this.feedId,
     required this.username,
-    required this.avatarUrl,
     required this.statusText,
     required this.cardTitle,
     required this.cardColor,
@@ -175,6 +180,21 @@ class FeedItem extends StatelessWidget {
     required this.comments,
   });
 
+  // ================= ADD BOOKMARK (ANTI DUPLIKAT) =================
+  Future<void> _addBookmark(BuildContext context) async {
+    await FirebaseFirestore.instance.collection('bookmarks').add({
+      'userId': 'dummy-user-id',
+      'feedId': feedId,
+      'cardTitle': cardTitle,
+      'statusText': statusText,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Added to Library")));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -182,28 +202,23 @@ class FeedItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Row
           Row(
-            children: [
+            children: const [
               CircleAvatar(
                 radius: 18,
-                backgroundImage: NetworkImage(avatarUrl),
-                onBackgroundImageError: (_, __) {},
+                backgroundColor: Colors.grey,
+                child: Icon(Icons.person, size: 18, color: Colors.white),
               ),
-              const SizedBox(width: 10),
-              Text(
-                username,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              SizedBox(width: 10),
             ],
           ),
-          const SizedBox(height: 8),
 
-          // Status Text
-          Text(statusText, style: const TextStyle(color: Colors.black87)),
+          const SizedBox(height: 8),
+          Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(statusText),
           const SizedBox(height: 12),
 
-          // The Card (Warna clrResultBrown dari parameter)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -214,16 +229,12 @@ class FeedItem extends StatelessWidget {
             child: Text(
               cardTitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
           ),
+
           const SizedBox(height: 12),
 
-          // Action Icons Row
           Row(
             children: [
               _buildIconStat(Icons.favorite, likes, Colors.red),
@@ -236,7 +247,14 @@ class FeedItem extends StatelessWidget {
                 Colors.black54,
               ),
               const Spacer(),
-              const Icon(Icons.bookmark_add_outlined, color: Colors.black54),
+
+              GestureDetector(
+                onTap: () => _addBookmark(context),
+                child: const Icon(
+                  Icons.bookmark_add_outlined,
+                  color: Colors.black54,
+                ),
+              ),
             ],
           ),
         ],
@@ -244,15 +262,12 @@ class FeedItem extends StatelessWidget {
     );
   }
 
-  Widget _buildIconStat(IconData icon, int count, Color iconColor) {
+  Widget _buildIconStat(IconData icon, int count, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: iconColor),
+        Icon(icon, size: 20, color: color),
         const SizedBox(width: 4),
-        Text(
-          "$count",
-          style: const TextStyle(color: Colors.black54, fontSize: 13),
-        ),
+        Text("$count", style: const TextStyle(fontSize: 13)),
       ],
     );
   }
