@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_header.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -8,11 +9,13 @@ class LibraryPage extends StatefulWidget {
 }
 
 class _LibraryPageState extends State<LibraryPage> {
+  // Warna asli dari kode Anda sebelumnya
+  final Color clrItemBrown = const Color(0xFF6D4B41);
+
   bool isSelectionMode = false;
   bool isSelected = false;
   final GlobalKey menuKey = GlobalKey();
 
-  // fungsi reset mode checklist
   void exitSelectionMode() {
     if (isSelectionMode) {
       setState(() {
@@ -27,86 +30,50 @@ class _LibraryPageState extends State<LibraryPage> {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-
-        title: Stack(
-          children: [
-            Center(
-              child: Column(
-                children: const [
-                  Text(
-                    "Library",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    "Here is all of the added story",
-                    style: TextStyle(fontSize: 11, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => print("Profile ditekan"),
-                  child: const CircleAvatar(
-                    radius: 18,
-                    backgroundImage: AssetImage("assets/profile-nnti.jpg"),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-
-        actions: [
-          IconButton(
-            onPressed: () => print("Search"),
-            icon: const Icon(Icons.search, color: Colors.black, size: 26),
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
-
-      //detect luar area content
-
+      // GestureDetector untuk exit selection mode
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: exitSelectionMode, // klik area luar → kembali normal
-
+        onTap: exitSelectionMode,
         child: Stack(
           children: [
+            // 1. BACKGROUND (Dikembalikan seperti sebelumnya: Tidak Putih Polos)
             Positioned.fill(
               child: Opacity(
-                opacity: 0.12,
-                child: Image.asset(
-                  "assets/background-nnti.png",
+                opacity: 0.12, // Opasitas sesuai kode asli Anda
+                child: Image.network(
+                  // Menggunakan URL gambar yang sama untuk placeholder
+                  'https://i.pinimg.com/originals/e8/34/08/e8340882583842c38d41577782163353.jpg',
                   fit: BoxFit.cover,
+                  errorBuilder: (c, o, s) => Container(color: Colors.grey[100]),
                 ),
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            SafeArea(
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
+                  // 2. HEADER
+                  const AppHeader(
+                    title: "Library",
+                    subtitle: "Manage your collection",
+                  ),
 
+                  // 3. KONTEN LIST
                   Expanded(
                     child: ListView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                      ), // Padding asli 20
                       children: [
+                        const SizedBox(height: 10),
+
                         buildContentItem(),
 
                         const SizedBox(height: 10),
+
                         buildBottomButton(),
-                        const SizedBox(height: 20),
+
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
@@ -119,24 +86,21 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  //content list
+  // --- WIDGET ITEM KONTEN (Warna 0xFF6D4B41) ---
   Widget buildContentItem() {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
-
         onLongPress: () {
           setState(() {
             isSelectionMode = true;
           });
         },
-
         onTap: () {
           if (isSelectionMode) {
             setState(() {
               isSelected = !isSelected;
-
               if (!isSelected) {
                 isSelectionMode = false;
               }
@@ -145,53 +109,52 @@ class _LibraryPageState extends State<LibraryPage> {
             print("Content dibuka");
           }
         },
-
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF6D4B41),
+            color: clrItemBrown, // Warna Coklat Tua Asli
             borderRadius: BorderRadius.circular(10),
           ),
-
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (isSelectionMode)
-                Checkbox(
-                  value: isSelected,
-                  activeColor: Colors.white,
-                  checkColor: Colors.black,
-                  onChanged: (v) {
-                    setState(() {
-                      isSelected = v!;
-
-                      if (!isSelected) {
-                        isSelectionMode = false;
-                      }
-                    });
-                  },
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: isSelected,
+                      activeColor: Colors.white,
+                      checkColor: Colors.black, // Check hitam sesuai kode asli
+                      onChanged: (v) {
+                        setState(() {
+                          isSelected = v!;
+                          if (!isSelected) {
+                            isSelectionMode = false;
+                          }
+                        });
+                      },
+                    ),
+                  ),
                 ),
 
               const Expanded(
                 child: Text(
                   "Kesatria Gelap Pemburu Myth",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
 
-              // titik tiga
               InkWell(
                 key: menuKey,
                 onTap: () async {
                   final RenderBox button =
                       menuKey.currentContext!.findRenderObject() as RenderBox;
-
                   final RenderBox overlay =
-                      Overlay.of(context).context.findRenderObject() as RenderBox;
-
+                      Overlay.of(context).context.findRenderObject()
+                          as RenderBox;
                   final Offset pos = button.localToGlobal(Offset.zero);
 
                   final value = await showMenu(
@@ -213,11 +176,12 @@ class _LibraryPageState extends State<LibraryPage> {
                       PopupMenuItem(value: "favorite", child: Text("Favorite")),
                     ],
                   );
-
                   if (value != null) print("$value dipilih");
                 },
-
-                child: const Icon(Icons.more_horiz_rounded, color: Colors.white),
+                child: const Padding(
+                  padding: EdgeInsets.all(4.0),
+                  child: Icon(Icons.more_horiz_rounded, color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -226,9 +190,7 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-
-  //add n delete btn
-
+  // --- TOMBOL BAWAH (Style Transparan + Border) ---
   Widget buildBottomButton() {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
@@ -243,22 +205,23 @@ class _LibraryPageState extends State<LibraryPage> {
           print("Tambah data");
         }
       },
-
       child: Container(
         height: 50,
         decoration: BoxDecoration(
+          // Logic warna asli: Merah jika select, Transparan jika tidak
           color: isSelectionMode ? Colors.red : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelectionMode ? Colors.red : const Color(0xFF6D4B41),
+            // Border Merah jika select, Coklat jika tidak
+            color: isSelectionMode ? Colors.red : clrItemBrown,
             width: 1.2,
           ),
         ),
-
         child: Center(
           child: Icon(
             isSelectionMode ? Icons.delete : Icons.add,
-            color: isSelectionMode ? Colors.white : const Color(0xFF6D4B41),
+            // Icon Putih jika select, Coklat jika tidak
+            color: isSelectionMode ? Colors.white : clrItemBrown,
             size: 26,
           ),
         ),

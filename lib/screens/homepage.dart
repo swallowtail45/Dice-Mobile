@@ -1,198 +1,148 @@
 import 'package:flutter/material.dart';
-
+import 'app_header.dart'; // Pastikan file ini ada
+// import 'navbar.dart'; // Jika ingin memanggil navbar di sini juga
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
-  final List<Widget> _screens = [
-    HomeContent(),
-    ProfileContent(),
-    SettingsContent(),
-    AboutContent(),
-  ];
-
-  final List<String> _titles = ['Home', 'Profile', 'Settings', 'About'];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    Navigator.pop(context);
-  }
+  // --- PALET WARNA (Sesuai DiceRollerPage) ---
+  final Color clrResultBrown = const Color(0xFF755C52);
+  final Color clrDarkButton = const Color(0xFF33333D);
+  final Color clrGrayBox = const Color(0xFFD6DBDC);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-      ),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            // Drawer Header with user info
-            DrawerHeader(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue, Colors.blue.shade700],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    child: Text('JD'),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'John Doe',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'johndoe@example.com',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Main navigation items
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.home),
-                    title: Text('Home'),
-                    selected: _selectedIndex == 0,
-                    onTap: () => _onItemTapped(0),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person),
-                    title: Text('Profile'),
-                    selected: _selectedIndex == 1,
-                    onTap: () => _onItemTapped(1),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.settings),
-                    title: Text('Settings'),
-                    selected: _selectedIndex == 2,
-                    onTap: () => _onItemTapped(2),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.info),
-                    title: Text('About'),
-                    selected: _selectedIndex == 3,
-                    onTap: () => _onItemTapped(3),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Footer section
-            Divider(),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.power_settings_new, size: 18),
-                  SizedBox(width: 8),
-                  Text('Log Out'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          _screens[_selectedIndex], // Main content
-          
-          // Center bottom Row
+          // --- BACKGROUND PATTERN (Opsional, agar sama dengan Dice Page) ---
           Positioned.fill(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FloatingActionButton(
-                      onPressed: () {
-                        print('Button 1 pressed');
-                      },
-                      child: Icon(Icons.home),
-                      backgroundColor: Colors.blue,
-                      mini: false,
-                    ),
-                    SizedBox(width: 10),
-                    FloatingActionButton(
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      child: Icon(Icons.menu),
-                      backgroundColor: Colors.green,
-                    ),
-                    SizedBox(width: 10),
-                    FloatingActionButton(
-                      onPressed: () {
-                        print('Button 3 pressed');
-                      },
-                      child: Icon(Icons.settings),
-                      backgroundColor: Colors.orange,
-                      mini: false,
-                    ),
-                    SizedBox(width: 10),
-                    FloatingActionButton(
-                      onPressed: () {
-                        print('Button 4 pressed');
-                      },
-                      child: Icon(Icons.attach_email),
-                      backgroundColor: const Color.fromARGB(255, 228, 58, 200),
-                      mini: false,
-                    ),
-                  ],
+            child: Opacity(
+              opacity: 0.05,
+              child: Image.network(
+                'https://i.pinimg.com/originals/e8/34/08/e8340882583842c38d41577782163353.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (c, o, s) => Container(color: Colors.white),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // 1. HEADER (Konsisten)
+                const AppHeader(
+                  title: "Hello User",
+                  subtitle: "What are you going to do today?",
+                ),
+
+                // 2. KONTEN SCROLLABLE
+                Expanded(
+                  child: ListView(
+                    // PADDING 24.0 (Sesuai Acuan)
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                    children: [
+                      const SizedBox(height: 10),
+
+                      // Input Box (Create Story)
+                      _buildCreateStoryBox(),
+
+                      const SizedBox(height: 30),
+
+                      // Feed Item 1
+                      FeedItem(
+                        username: "gardiono ke-2",
+                        avatarUrl: "https://i.pravatar.cc/150?img=11",
+                        statusText: "Just post my new story",
+                        cardTitle: "Kesatria Gelap Pemburu Myth",
+                        cardColor: clrResultBrown, // Menggunakan warna acuan
+                        likes: 80,
+                        upvotes: 80,
+                        comments: 80,
+                      ),
+
+                      // Feed Item 2
+                      FeedItem(
+                        username: "penyembah_kacamata",
+                        avatarUrl: "https://i.pravatar.cc/150?img=33",
+                        statusText: "My kisah cik",
+                        cardTitle: "My Kisah: Waguro dan Rintara arts",
+                        cardColor: clrResultBrown, // Menggunakan warna acuan
+                        likes: 12,
+                        upvotes: 5,
+                        comments: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // JIKA INGIN NAVBAR MUNCUL DI SINI JUGA:
+          /*
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: CustomNavbar(
+              selectedIndex: 0, // 0 untuk Home/Profile
+              onTap: (index) { print("Nav $index"); },
+            ),
+          ),
+          */
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCreateStoryBox() {
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.white, // Atau clrGrayBox jika ingin abu-abu penuh
+        borderRadius: BorderRadius.circular(16),
+        // Border dibuat mirip style DiceRoller (Colors.black12 atau grey.shade300)
+        border: Border.all(color: Colors.black12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                maxLines: null,
+                decoration: const InputDecoration(
+                  hintText: "I just make a new story...",
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.grey),
                 ),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// Content widgets for each screen
-class HomeContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.home, size: 64, color: Colors.blue),
-          SizedBox(height: 16),
-          Text(
-            'Home Screen',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Welcome to the home screen!',
-            style: TextStyle(fontSize: 16),
+          // Tombol Upload (Warna clrDarkButton)
+          Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: clrDarkButton, // 0xFF33333D
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15),
+              ),
+            ),
+            child: const Icon(Icons.upload_file, color: Colors.white70),
           ),
         ],
       ),
@@ -200,74 +150,110 @@ class HomeContent extends StatelessWidget {
   }
 }
 
-class ProfileContent extends StatelessWidget {
+// =========================================
+// Feed Item Widget
+// =========================================
+class FeedItem extends StatelessWidget {
+  final String username;
+  final String avatarUrl;
+  final String statusText;
+  final String cardTitle;
+  final Color cardColor;
+  final int likes;
+  final int upvotes;
+  final int comments;
+
+  const FeedItem({
+    super.key,
+    required this.username,
+    required this.avatarUrl,
+    required this.statusText,
+    required this.cardTitle,
+    required this.cardColor,
+    required this.likes,
+    required this.upvotes,
+    required this.comments,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.person, size: 64, color: Colors.green),
-          SizedBox(height: 16),
-          Text(
-            'Profile Screen',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          // User Row
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage(avatarUrl),
+                onBackgroundImageError: (_, __) {},
+              ),
+              const SizedBox(width: 10),
+              Text(
+                username,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          SizedBox(height: 16),
-          Text(
-            'Your profile information',
-            style: TextStyle(fontSize: 16),
+          const SizedBox(height: 8),
+
+          // Status Text
+          Text(statusText, style: const TextStyle(color: Colors.black87)),
+          const SizedBox(height: 12),
+
+          // The Card (Warna clrResultBrown dari parameter)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              cardTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Action Icons Row
+          Row(
+            children: [
+              _buildIconStat(Icons.favorite, likes, Colors.red),
+              const SizedBox(width: 16),
+              _buildIconStat(Icons.arrow_upward, upvotes, Colors.black54),
+              const SizedBox(width: 16),
+              _buildIconStat(
+                Icons.chat_bubble_outline,
+                comments,
+                Colors.black54,
+              ),
+              const Spacer(),
+              const Icon(Icons.bookmark_add_outlined, color: Colors.black54),
+            ],
           ),
         ],
       ),
     );
   }
-}
 
-class SettingsContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.settings, size: 64, color: Colors.orange),
-          SizedBox(height: 16),
-          Text(
-            'Settings Screen',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Configure your app settings',
-            style: TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AboutContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.info, size: 64, color: Colors.purple),
-          SizedBox(height: 16),
-          Text(
-            'About Screen',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Learn more about this app',
-            style: TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
+  Widget _buildIconStat(IconData icon, int count, Color iconColor) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: iconColor),
+        const SizedBox(width: 4),
+        Text(
+          "$count",
+          style: const TextStyle(color: Colors.black54, fontSize: 13),
+        ),
+      ],
     );
   }
 }

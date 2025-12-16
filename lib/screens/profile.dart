@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_header.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -186,6 +187,12 @@ class _ProfilePageState extends State<ProfilePage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              const AppHeader(
+                title: "Profile",
+                subtitle: "This is your profile",
+                showAvatar: false,
+              ),
+
               _buildHeader(),
 
               const SizedBox(height: 20),
