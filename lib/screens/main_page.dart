@@ -16,12 +16,21 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 1; // default Dice
 
-  final List<Widget> _pages = const [
-    HomeWrapper(), // index 0
-    DiceRollerPage(), // index 1
-    LibraryPage(), // index 2
-    ProfilePage(), // index 3
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pages = [
+      const HomeWrapper(),          // index 0
+      const DiceRollerPage(),       // index 1
+      LibraryPage(
+        onNavigate: _onNavbarTapped,
+      ),                             // index 2
+      const ProfilePage(),          // index 3
+    ];
+  }
 
   void _onNavbarTapped(int index) {
     setState(() {
@@ -34,7 +43,10 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(index: _currentIndex, children: _pages),
+          IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
 
           Align(
             alignment: Alignment.bottomCenter,
